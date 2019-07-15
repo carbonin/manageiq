@@ -1,6 +1,8 @@
 class ManageIQ::Providers::EmbeddedAnsible::AutomationManager::PlaybookRunner < ::Job
   DEFAULT_EXECUTION_TTL = 10 # minutes
 
+  include AnsibleRunnerAuthTranslations
+
   # options are job table columns, including options column which is the playbook context info
   def self.create_job(options)
     super(name, options.with_indifferent_access)
@@ -33,15 +35,6 @@ class ManageIQ::Providers::EmbeddedAnsible::AutomationManager::PlaybookRunner < 
   rescue => err
     _log.log_backtrace(err)
     my_signal(minimize_indirect, :post_ansible_run, err.message, 'error')
-  end
-
-  def translate_credentials!(launch_options)
-    %i[credential vault_credential cloud_credential network_credential].each do |cred_type|
-      credential_id = launch_options.delete("#{cred_type}_id".to_sym)
-      next if credential_id.blank?
-
-      launch_options[cred_type] = Authentication.find(credential_id).native_ref
-    end
   end
 
   LAUNCH_OPTIONS_KEYS = %i[

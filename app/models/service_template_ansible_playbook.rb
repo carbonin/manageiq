@@ -2,6 +2,8 @@ class ServiceTemplateAnsiblePlaybook < ServiceTemplateGeneric
   before_destroy :check_retirement_potential, :prepend => true
   around_destroy :around_destroy_callback, :prepend => true
 
+  extend AnsibleRunnerAuthTranslations
+
   RETIREMENT_ENTRY_POINTS = {
     'yes_without_playbook' => '/Service/Generic/StateMachines/GenericLifecycle/Retire_Basic_Resource',
     'no_without_playbook'  => '/Service/Generic/StateMachines/GenericLifecycle/Retire_Basic_Resource_None',
@@ -105,10 +107,7 @@ class ServiceTemplateAnsiblePlaybook < ServiceTemplateGeneric
       end.to_json
     end
 
-    %i(credential vault_credential cloud_credential network_credential).each do |credential|
-      cred_sym = "#{credential}_id".to_sym
-      params[credential] = Authentication.find(info[cred_sym]).native_ref if info[cred_sym]
-    end
+    translate_credentials!(params, :other_hash => info)
 
     [tower, params.compact]
   end

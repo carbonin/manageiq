@@ -1,6 +1,8 @@
 class ManageIQ::Providers::EmbeddedAnsible::AutomationManager::Playbook < ManageIQ::Providers::EmbeddedAutomationManager::ConfigurationScriptPayload
   has_many :jobs, :class_name => 'OrchestrationStack', :foreign_key => :configuration_script_base_id
 
+  include AnsibleRunnerAuthTranslations
+
   def path
     configuration_script_source.path_to_playbook(name)
   end
@@ -46,10 +48,7 @@ class ManageIQ::Providers::EmbeddedAnsible::AutomationManager::Playbook < Manage
       :extra_vars               => options[:extra_vars].try(:to_json)
     }
 
-    %i(credential vault_credential cloud_credential network_credential).each do |credential|
-      cred_sym = "#{credential}_id".to_sym
-      params[credential] = Authentication.find(options[cred_sym]).native_ref if options[cred_sym].present?
-    end
+    translate_credentials!(options, :other_hash => params)
 
     params.compact
   end

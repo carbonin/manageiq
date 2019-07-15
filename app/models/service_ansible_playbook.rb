@@ -1,5 +1,6 @@
 class ServiceAnsiblePlaybook < ServiceGeneric
   include AnsibleExtraVarsMixin
+  include AnsibleRunnerAuthTranslations
 
   delegate :job_template, :to => :service_template, :allow_nil => true
 
@@ -95,14 +96,6 @@ class ServiceAnsiblePlaybook < ServiceGeneric
     options.fetch_path(:config_info, action.downcase.to_sym).slice(*CONFIG_OPTIONS_WHITELIST).with_indifferent_access
   end
 
-  def translate_credentials!(job_options)
-    %i[credential vault_credential network_credential cloud_credential].each do |cred|
-      cred_sym = "#{cred}_id".to_sym
-      credential_id = job_options.delete(cred_sym)
-      job_options[cred] = Authentication.find(credential_id).native_ref if credential_id.present?
-    end
-  end
-
   def save_job_options(action, overrides)
     job_options = config_options(action)
 
@@ -112,7 +105,7 @@ class ServiceAnsiblePlaybook < ServiceGeneric
 
     job_options.deep_merge!(parse_dialog_options) unless action == ResourceAction::RETIREMENT
     job_options.deep_merge!(overrides)
-    translate_credentials!(job_options)
+    translate_credentials!(job_options, :mutate_options => true)
 
     options[job_option_key(action)] = job_options
     save!

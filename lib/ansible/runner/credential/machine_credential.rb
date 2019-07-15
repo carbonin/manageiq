@@ -7,7 +7,7 @@ module Ansible
 
       def command_line
         {:user => auth.userid}.delete_blanks.merge(become_args).tap do |args|
-          args[:ask_pass] = nil if auth.password.present?
+          args.delete(:ask_pass) if auth.password.present?
         end
       end
 

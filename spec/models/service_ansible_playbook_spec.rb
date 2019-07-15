@@ -150,7 +150,7 @@ describe(ServiceAnsiblePlaybook) do
           expect(service.options[:retirement_job_options][:extra_vars]).to eq(
             'var1' => 'default_val1', 'var2' => 'default_val2', 'var3' => 'default_val3'
           )
-          expect(service.options[:retirement_job_options]).not_to have_key(:credential)
+          expect(service.options[:retirement_job_options][:credential]).to eq(credential_0.id)
         end
       end
     end
